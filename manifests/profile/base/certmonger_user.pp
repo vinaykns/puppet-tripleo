@@ -82,6 +82,21 @@
 #   certificate is renewed.
 #   Defaults to undef
 #
+# [*metrics_qdr_certificate_specs*]
+#   (Optional) The specifications to give to certmonger fot the certificate(s)
+#   it will create.
+#   Defaults to hiera('metrics_qdr_certificate_specs', {}).
+#
+# [*ceilometer_base_certificate_specs*]
+#   (Optional) The specifications to give to certmonger for the certificate(s)
+#   it will create.
+#   Defaults to hiera('ceilometer_base_certificate_specs', {}).
+#
+# [*collectd_certificate_specs*]
+#   (Optional) The specifications to give to certmonger for the certificate(s)
+#   it will create.
+#   Defaults to hiera('collectd_certificate_specs', {}).
+#
 # [*mysql_certificate_specs*]
 #   (Optional) The specifications to give to certmonger for the certificate(s)
 #   it will create.
@@ -150,6 +165,9 @@ class tripleo::profile::base::certmonger_user (
   $libvirt_vnc_postsave_cmd       = undef,
   $qemu_certificates_specs    = hiera('qemu_certificates_specs', {}),
   $qemu_postsave_cmd          = undef,
+  $metrics_qdr_certificate_specs = hiera('metrics_qdr_certificate_specs', {}),
+  $ceilometer_base_certificate_specs = hiera('ceilometer_base_certificate_specs', {}),
+  $collectd_certificate_specs = hiera('collectd_certificate_specs', {}),
   $mysql_certificate_specs    = hiera('tripleo::profile::base::database::mysql::certificate_specs', {}),
   $rabbitmq_certificate_specs = hiera('tripleo::profile::base::rabbitmq::certificate_specs', {}),
   $redis_certificate_specs    = hiera('redis_certificate_specs', {}),
@@ -217,6 +235,15 @@ class tripleo::profile::base::certmonger_user (
       # The haproxy fronends (or listen resources) depend on the certificate
       # existing and need to be refreshed if it changed.
       Tripleo::Certmonger::Haproxy<||> ~> Haproxy::Listen<||>
+    }
+    unless empty($metrics_qdr_certificate_specs) {
+      ensure_resource('class', 'tripleo::certmonger::metrics_qdr', $metrics_qdr_certificate_specs)
+    }
+    unless empty($ceilometer_base_certificate_specs) {
+      ensure_resource('class', 'tripleo::certmonger::ceilometer_base', $ceilometer_base_certificate_specs)
+    }
+    unless empty($collectd_certificate_specs) {
+      ensure_resource('class', 'tripleo::certmonger::collectd', $collectd_certificate_specs)
     }
     unless empty($mysql_certificate_specs) {
       ensure_resource('class', 'tripleo::certmonger::mysql', $mysql_certificate_specs)
